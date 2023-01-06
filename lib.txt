@@ -1,0 +1,12 @@
+
+typedef struct Node {
+    pe_resource_t* value;
+    struct Node *next;
+} Node;
+
+struct set
+{
+    int key;
+    Node* head;
+};
+
