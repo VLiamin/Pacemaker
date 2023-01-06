@@ -1,0 +1,52 @@
+#!/bin/bash -ue
+
+curdir=$(dirname $0)
+
+frequency=1000
+perf_event_max_stack=4098
+
+positional_args=()
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -o|--output)
+              output="$2"
+              shift 2
+              ;;
+
+        -*|--*)
+            if [[ ${#positional_args[@]} -eq 0 ]]; then
+                echo "Unknown option $1"
+                exit 1
+            fi
+            positional_args+=("$1")
+            shift
+        ;;
+
+        *)
+          positional_args+=("$1")
+          shift
+        ;;
+  esac
+done
+
+program=${positional_args[0]}
+
+if [[ -z "${output}" ]]; then
+    output=$(realpath ${curdir}/../flame-graph-${program}.svg)
+fi
+
+echo "Collecting flame graph for ${positional_args[@]} into ${output}" 1>&2
+
+mkdir -p $(dirname ${output})
+
+sysctl -w kernel.perf_event_max_stack=${perf_event_max_stack}
+echo 0 > /proc/sys/kernel/kptr_restrict
+
+perf record --call-graph dwarf -F ${frequency} -o /tmp/${program}-perf-record.out -- "${positional_args[@]}"
+
+perf script --max-stack 4098 -i /tmp/${program}-perf-record.out | /FlameGraph/stackcollapse-perf.pl > /tmp/${program}-perf-record.folded
+/FlameGraph/flamegraph.pl \
+    --title "$*"          \
+    /tmp/${program}-perf-record.folded > ${output}
+
+echo "Flame graph is saved into ${output}"

@@ -1,0 +1,81 @@
+#!/bin/bash -e
+
+cts_exec_helper=/usr/libexec/pacemaker/cts-exec-helper
+
+function verbose()  { echo "+ $@" 1>&2; $@; }
+
+function metadata()     { verbose ${cts_exec_helper} -c metadata                 -C ocf -P $1 -T $2 ;}
+function register()     { verbose ${cts_exec_helper} -c register_rsc       -r $1 -C ocf -P $2 -T $3 ;}
+function probe()        { verbose ${cts_exec_helper} -c exec    -a monitor -r $1 -i 0   -t 9000     ;}
+function monitor()      { verbose ${cts_exec_helper} -c exec    -a monitor -r $1 -i 10s -t 9000     ;}
+function cancel()       { verbose ${cts_exec_helper} -c cancel  -a monitor -r $1 -i 10s -t 9000     ;}
+function start()        { verbose ${cts_exec_helper} -c exec    -a start   -r $1 -i 0   -t 9000     ;}
+function stop()         { verbose ${cts_exec_helper} -c exec    -a stop    -r $1 -i 0   -t 9000     ;}
+function promote()      { verbose ${cts_exec_helper} -c exec    -a promote -r $1 -i 0   -t 9000     ;}
+function demote()       { verbose ${cts_exec_helper} -c exec    -a demote  -r $1 -i 0   -t 9000     ;}
+function get_rsc_info() { verbose ${cts_exec_helper} -c get_rsc_info       -r $1                    ;}
+function list_agents()  { verbose ${cts_exec_helper} -c list_agents                                 ;}
+
+resource_id=acl-00
+provider=yadro
+kind=acl
+
+positional_args=()
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -r|--resource)
+            resource_id=$2
+            shift 2
+            ;;
+
+        -p|--provider)
+            provider=$2
+            shift 2
+            ;;
+
+        -k|--kind)
+            kind=$2
+            shift 2
+            ;;
+
+        -*|--*)
+            echo "Unknown option $1"
+            exit 1
+        ;;
+
+        *)
+          positional_args+=("$1")
+          shift
+        ;;
+  esac
+done
+
+command=${positional_args[0]}
+
+case ${command} in
+    list_agents)
+        list_agents
+    ;;
+
+    register)
+        ${command} ${resource_id} ${provider} ${kind}
+    ;;
+
+    metadata)
+        ${command} ${provider} ${kind}
+    ;;
+
+    get_rsc_info|start|stop|promote|demote|probe|monitor|cancel)
+        ${command} ${resource_id}
+    ;;
+
+    *)
+        echo "Unknown command ${command}"
+        exit 1
+    ;;
+esac
+
+
+
+
+

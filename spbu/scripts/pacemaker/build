@@ -1,0 +1,20 @@
+#!/bin/bash -xe
+
+pushd ./pacemaker
+
+./autogen.sh
+
+./configure                    \
+    --disable-static           \
+    --disable-silent-rules     \
+    --with-acl=false           \
+    --with-nagios=false        \
+    --with-initdir=/etc/init.d \
+    --localstatedir=/var       \
+    --with-daemon-user=root    \
+    --with-daemon-group=root
+
+make install
+
+ldconfig
+

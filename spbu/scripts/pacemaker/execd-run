@@ -1,0 +1,8 @@
+#!/bin/bash -xe
+
+PCMK_stderr=true                           \
+PCMK_trace_functions=pcmk__client_data2xml \
+PCMK_trace_files=execd_commands.c          \
+/usr/libexec/pacemaker/pacemaker-execd
+
+

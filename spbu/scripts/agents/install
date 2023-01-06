@@ -1,0 +1,7 @@
+#!/bin/bash -e
+
+function verbose()  { echo "+ $@" 1>&2; $@; }
+
+for agent in ./cmd/agents/{acl,lun,mapped-lun,pool,target,traid-config,volume} ; do
+   verbose go build -o /usr/lib/ocf/resource.d/yadro/$(basename ${agent}) ${agent}
+done

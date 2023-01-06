@@ -1,0 +1,5 @@
+#!/bin/bash -ex
+
+dockerroot=./docker
+
+docker build --tag pcmkrtoolkit:latest ${dockerroot}

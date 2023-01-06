@@ -1,0 +1,3 @@
+#!/bin/bash -x
+
+docker run -it --rm --privileged -v $PWD:$PWD --workdir $PWD --name pcmkrtoolkit pcmkrtoolkit:latest ${@:-bash}

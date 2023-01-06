@@ -1,0 +1,5 @@
+#!/bin/bash
+
+[ -d "./pacemaker" ] || git clone https://github.com/mikekonovalov/pacemaker.git pacemaker
+
+

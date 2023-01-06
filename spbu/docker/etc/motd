@@ -1,0 +1,9 @@
+При первом запуске контейнера
+
+    ./scripts/pacemaker/checkout && ./scripts/pacemaker/build
+
+При последующих запусках контейнера
+
+    ./scripts/pacemaker/install
+
+
