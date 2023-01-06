@@ -1,0 +1,118 @@
+int getHash(const char *S);
+void push(Node **head, pe_resource_t* data);
+void insert(char* key, pe_resource_t* data, struct set *array);
+void init_array(struct set **array);
+void insert_children(pe_resource_t * rsc, struct set *hashTable);
+
+static bool
+evaluate_lifetime(xmlNode *lifetime, pe_working_set_t *data_set)
+{
+    bool result = FALSE;
+    crm_time_t *next_change = crm_time_new_undefined();
+
+    result = pe_evaluate_rules(lifetime, NULL, data_set->now, next_change);
+    if (crm_time_is_defined(next_change)) {
+        time_t recheck = (time_t) crm_time_get_seconds_since_epoch(next_change);
+
+        pe__update_recheck_time(recheck, data_set);
+    }
+    crm_time_free(next_change);
+    return result;
+}
+
+int capacity = 100;
+int size = 0;
+struct set *hashTable = NULL;
+
+void push(Node **head, pe_resource_t* data) {
+    Node *tmp = (Node*) malloc(sizeof(Node));
+    //  tmp->value = (pe_resource_t*)malloc(sizeof (pe_resource_t));
+    tmp->value = data;
+    tmp->next = (*head);
+    (*head) = tmp;
+}
+
+
+int getHash(const char *S)
+{
+    int i = 0;
+    int r = 0;
+    while(*S)
+    {
+        i++;
+        r+=(int)(*S);
+        S = S + 3;
+    }
+    return r % capacity;
+}
+
+void init_array(struct set **array)
+{
+    struct set *tmp = (struct set *)malloc(capacity * sizeof(struct set));
+    for (int i = 0; i < capacity; i++)
+    {
+        tmp[i].key = i;
+        tmp[i].head = NULL;
+    }
+    (*array) = tmp;
+}
+
+void insert(char* key, pe_resource_t* data, struct set *array)
+{
+    int index = getHash(key);
+    if (array[index].head == NULL)
+    {
+        Node* head = NULL;
+
+
+        array[index].key = index;
+
+        push(&head, data);
+        array[index].head = head;
+        //  printf("\n Ключ (%s) вставлен \n", key);
+    }
+    else if (array[index].key == getHash(key))
+    {
+        push(&array[index].head, data);
+    }
+    else
+    {
+        printf("\n Возникла коллизия \n");
+    }
+}
+
+
+pe_resource_t *
+compareKey(const char* key, struct set *array)
+{
+    int index = getHash(key);
+    if (array[index].head == 0)
+    {
+        printf("\n Key do not exists \n");
+    }
+    else
+    {
+        //   printf("\n Ключ (%s) найден \n", key);
+        Node *ptr = array[index].head;
+        while (ptr != NULL)
+        {
+            if (!strcmp(key, ptr->value->id)) {
+                return ptr->value;;
+            }
+
+            ptr = ptr->next; // в ptr адресс следующего элемента списка.
+        }
+
+        return NULL;
+    }
+
+    return NULL;
+}
+ 
+void insert_children(pe_resource_t * rsc, struct set *hashTable) {
+    for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+        pe_resource_t *child = (pe_resource_t *) gIter->data;
+        insert(child->id, child, hashTable);
+        insert_children(child, hashTable);
+    }
+}
